@@ -58,6 +58,21 @@ export default function AppTodo() {
     setCurrentTodo(null);
   };
 
+  const deleteTodo = (id: string) => {
+    if (currentTodo) {
+      setCurrentTodo(null);
+    }
+    setTodos((prev) => {
+      const deleteItem = prev.findIndex((todo) => todo.id === id);
+      if (deleteItem > -1) {
+        const result = [...prev];
+        result.splice(deleteItem, 1);
+        return result;
+      }
+      return prev;
+    });
+  };
+
   return (
     <div>
       <div className="flex flex-col justify-center items-center h-screen border bg-amber-200 min-w-[300px]">
@@ -73,12 +88,14 @@ export default function AppTodo() {
             todos={notDoneTask}
             handleChecked={handleChecked}
             startEdit={startEdit}
+            deleteTodo={deleteTodo}
           />
           <TaskList
             doneTaskList
             todos={doneTask}
             handleChecked={handleChecked}
             startEdit={startEdit}
+            deleteTodo={deleteTodo}
           />
         </div>
       </div>
