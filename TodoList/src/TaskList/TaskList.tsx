@@ -4,10 +4,11 @@ interface TaskList {
   doneTaskList: boolean;
   todos: Todo[];
   handleChecked: (id: string, done: boolean) => void;
+  startEdit: (id: string) => void;
 }
 
 export default function TaskList(props: TaskList) {
-  const { doneTaskList, todos, handleChecked } = props;
+  const { doneTaskList, todos, handleChecked, startEdit } = props;
 
   return (
     <div>
@@ -36,7 +37,10 @@ export default function TaskList(props: TaskList) {
               {todo.name}
             </span>
             <div className="flex gap-2">
-              <button className="bg-blue-900 rounded-md p-2 text-white hover:bg-amber-600">
+              <button
+                className="bg-blue-900 rounded-md p-2 text-white hover:bg-amber-600"
+                onClick={() => startEdit(todo.id)}
+              >
                 Edit
               </button>
               <button className="bg-blue-900 rounded-md p-2 text-white hover:bg-amber-600">
