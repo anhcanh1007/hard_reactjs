@@ -1,27 +1,39 @@
-import { useState } from "react";
-import TaskList from "../TaskList";
+import { useEffect, useState } from "react";
 import TodoInput from "../TodoInput";
-import { Todo } from "../@types/todos.type";
+import TodoTask from "../TodoTask";
+import { Todo } from "../@types/todo.type";
+
+type HandleNewTodos = (todos: Todo[]) => Todo[];
+const syncReactToLocal = (handleNewTodos: HandleNewTodos) => {
+  const todosString = localStorage.getItem("todos");
+  const todosObj: Todo[] = JSON.parse(todosString || "[]");
+  const newTodosObj = handleNewTodos(todosObj);
+  localStorage.setItem("todos", JSON.stringify(newTodosObj));
+};
 
 export default function AppTodo() {
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [currentTodo, setCurrentTodo] = useState<Todo | null>(null);
+  const [current, setCurrent] = useState<Todo | null>(null);
+  const doneTaskList = todos.filter((todo) => todo.done);
+  const notDoneTaskList = todos.filter((todo) => !todo.done);
 
-  const doneTask = todos.filter((todo) => todo.done);
-  const notDoneTask = todos.filter((todo) => !todo.done);
-  const addTodos = (name: string) => {
+  useEffect(() => {
+    const todosString = localStorage.getItem("todos");
+    const todosObj: Todo[] = JSON.parse(todosString || "[]");
+    setTodos(todosObj);
+  }, []);
+  const addTodo = (name: string) => {
     const todo: Todo = {
       name,
       done: false,
       id: new Date().toISOString(),
     };
-    setTodos((prev) => [...prev, todo]); //trả về mảng vì đang muốn thêm một phần tử mới vào mảng cũ
+    setTodos((prev) => [...prev, todo]);
+    syncReactToLocal((todosObj: Todo[]) => [...todosObj, todo]);
   };
-
-  const handleChecked = (id: string, done: boolean) => {
+  const checkDone = (id: string, done: boolean) => {
     setTodos((prev) => {
       return prev.map((todo) => {
-        //trả về object vì chỉ cần cập nhật một thuộc tính trong object
         if (todo.id === id) {
           return { ...todo, done };
         }
@@ -29,71 +41,71 @@ export default function AppTodo() {
       });
     });
   };
-
   const startEdit = (id: string) => {
     const findTodo = todos.find((todo) => todo.id === id);
     if (findTodo) {
-      setCurrentTodo(findTodo);
+      setCurrent(findTodo);
     }
   };
-
-  const editTodo = (name: string) => {
-    setCurrentTodo((prev) => {
+  const editting = (name: string) => {
+    setCurrent((prev) => {
       if (prev) {
         return { ...prev, name };
       }
       return null;
     });
   };
-
   const finishEdit = () => {
-    setTodos((prev) => {
-      return prev.map((todo) => {
-        if (todo.id === (currentTodo as Todo).id) {
-          return currentTodo as Todo;
+    const handle = (todoObj: Todo[]) => {
+      return todoObj.map((todo) => {
+        if (todo.id === (current as Todo).id) {
+          return current as Todo; //ép kiểu dữ liệu
         }
         return todo;
       });
-    });
-    setCurrentTodo(null);
+    };
+    setTodos(handle);
+    setCurrent(null);
+    syncReactToLocal(handle);
   };
-
   const deleteTodo = (id: string) => {
-    if (currentTodo) {
-      setCurrentTodo(null);
+    if (current) {
+      setCurrent(null);
     }
-    setTodos((prev) => {
-      const deleteItem = prev.findIndex((todo) => todo.id === id);
-      if (deleteItem > -1) {
-        const result = [...prev];
-        result.splice(deleteItem, 1);
+    const handle = (todoObj: Todo[]) => {
+      const itemdelete = todoObj.findIndex((todo) => todo.id === id);
+      if (itemdelete > -1) {
+        const result = [...todoObj];
+        result.splice(itemdelete, 1);
         return result;
       }
-      return prev;
-    });
+      return todoObj;
+    };
+    setTodos(handle);
+    syncReactToLocal(handle);
   };
-
+  console.log(todos);
   return (
     <div>
-      <div className="flex flex-col justify-center items-center h-screen border bg-amber-200 min-w-[300px]">
-        <div className="border-[1px] border-amber-600 rounded-md p-4">
+      <div className="bg-amber-100 flex justify-center items-center h-screen w-screen">
+        <div className="bg-gray-400 p-4 max-w-[600px] rounded-2xl flex flex-col gap-6">
           <TodoInput
-            addTodos={addTodos}
-            currentTodo={currentTodo}
-            editTodo={editTodo}
+            addTodo={addTodo}
+            editting={editting}
+            current={current}
             finishEdit={finishEdit}
           />
-          <TaskList
-            doneTaskList={false}
-            todos={notDoneTask}
-            handleChecked={handleChecked}
+          <TodoTask
+            doneTask={false}
+            todos={notDoneTaskList}
+            checkDone={checkDone}
             startEdit={startEdit}
             deleteTodo={deleteTodo}
           />
-          <TaskList
-            doneTaskList
-            todos={doneTask}
-            handleChecked={handleChecked}
+          <TodoTask
+            doneTask
+            todos={doneTaskList}
+            checkDone={checkDone}
             startEdit={startEdit}
             deleteTodo={deleteTodo}
           />

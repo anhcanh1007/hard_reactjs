@@ -1,46 +1,45 @@
 import { useState } from "react";
-import { Todo } from "../@types/todos.type";
+import { Todo } from "../@types/todo.type";
 
 interface TodoInputProps {
-  addTodos: (name: string) => void;
-  currentTodo: Todo | null;
-  editTodo: (name: string) => void;
+  addTodo: (name: string) => void;
+  editting: (name: string) => void;
+  current: Todo | null;
   finishEdit: () => void;
 }
 
 export default function TodoInput(props: TodoInputProps) {
-  const { addTodos, currentTodo, editTodo, finishEdit } = props;
+  const { addTodo, current, editting, finishEdit } = props;
   const [name, setName] = useState<string>("");
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (currentTodo) {
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (current) {
       finishEdit();
       if (name) setName("");
     } else {
-      addTodos(name);
+      addTodo(name);
       setName("");
     }
   };
   return (
     <div>
-      <div className="flex flex-col justify-center bg-blue-300 p-4 rounded-sm gap-4">
-        <h2 className="text-2xl text-green-800 text-center font-bold">
-          Add Todo
-        </h2>
-        <form className="flex justify-between gap-2" onSubmit={handleSubmit}>
+      <div className="bg-rose-50 p-2 rounded-sm flex flex-col gap-4">
+        <h2 className="text-center text1-2xl font-bold">Todo Input</h2>
+        <form onSubmit={handleSubmit} className="flex gap-2 justify-between">
           <input
             type="text"
             placeholder="caption goes here"
-            className="flex-1 border-[1px] text-xl p-2 rounded-md"
-            value={currentTodo ? currentTodo.name : name}
+            className="flex-1 border-1 border-red-600 p-2 rounded-sm"
+            value={current ? current.name : name}
             onChange={
-              currentTodo
-                ? (e) => editTodo(e.target.value)
+              current
+                ? (e) => editting(e.target.value)
                 : (e) => setName(e.target.value)
             }
           />
-          <button className="bg-blue-900 rounded-md p-2 text-white hover:bg-amber-600">
-            {currentTodo ? "Edit" : "Add"}
+          <button className="bg-pink-300 p-2 rounded-sm hover:bg-sky-400">
+            {current ? "Edit" : "Add"}
           </button>
         </form>
       </div>
