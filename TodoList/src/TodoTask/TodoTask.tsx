@@ -1,4 +1,6 @@
 import { Todo } from "../@types/todo.type";
+import PropTypes from "prop-types";
+import { TodoTypes } from "../PropTypes/todo.proptype";
 
 interface TodoTaskProps {
   doneTask: boolean;
@@ -47,3 +49,11 @@ export default function TodoTask(props: TodoTaskProps) {
     </div>
   );
 }
+
+TodoTask.propTypes = {
+  doneTask: PropTypes.bool,
+  todos: PropTypes.arrayOf(TodoTypes),
+  checkDone: PropTypes.func.isRequired,
+  startEdit: PropTypes.func.isRequired,
+  deleteTodo: PropTypes.func.isRequired,
+};

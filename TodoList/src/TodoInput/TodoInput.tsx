@@ -1,5 +1,8 @@
 import { useState } from "react";
+import PropTypes from "prop-types";
+
 import { Todo } from "../@types/todo.type";
+import { TodoTypes } from "../PropTypes/todo.proptype";
 
 interface TodoInputProps {
   addTodo: (name: string) => void;
@@ -46,3 +49,10 @@ export default function TodoInput(props: TodoInputProps) {
     </div>
   );
 }
+
+TodoInput.propTypes = {
+  addTodo: PropTypes.func.isRequired,
+  editting: PropTypes.func.isRequired,
+  current: PropTypes.oneOfType([TodoTypes, PropTypes.oneOf([null])]),
+  finishEdit: PropTypes.func.isRequired,
+};
