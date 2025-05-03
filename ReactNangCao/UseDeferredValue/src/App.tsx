@@ -1,5 +1,8 @@
 import "./App.css";
 import Product from "./Product";
+import MainLayout from "./ReactPortal/Layout";
+import Manager from "./ReactPortal/Manager";
+import ProductStartTransition from "./UseStartTransition/ProductStartTransition";
 // import Demo from "./Demo";
 import Welcome from "./Welcome";
 
@@ -8,7 +11,11 @@ function App() {
     <>
       {/* <Welcome /> */}
       {/* <Demo /> */}
-      <Product />
+      {/* <Product /> */}
+      {/* <ProductStartTransition /> */}
+      <MainLayout>
+        <Manager />
+      </MainLayout>
     </>
   );
 }
