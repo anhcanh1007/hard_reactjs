@@ -1,12 +1,28 @@
-import { useGetPostsQuery } from "../../../../service/blog.service";
+import { useDispatch } from "react-redux";
+import {
+  useDeletePostMutation,
+  useGetPostsQuery,
+} from "../../../../service/blog.service";
 import PostItem from "../PostItem/PostItem";
 import SkeletonPost from "../SkeletonPost";
+import { startEdit } from "../../blog.slice";
 
 export default function PostList() {
   //isLoading chỉ dành cho lần loading đầu tiên của component
   //isfetching là cho mỗi lần gọi api
   const { data, isLoading, isFetching } = useGetPostsQuery();
-  console.log(isLoading);
+  const [deletePost, deletePostResult] = useDeletePostMutation();
+
+  const dispatch = useDispatch();
+
+  const startEditting = (id: string) => {
+    dispatch(startEdit(id));
+  };
+
+  const hanleDeletePost = (id: string) => {
+    deletePost(id);
+  };
+
   return (
     <div>
       <div className="bg-white py-6 sm:py-8 lg:py-12">
@@ -28,7 +44,14 @@ export default function PostList() {
               </>
             )}
             {!isFetching &&
-              data?.map((data) => <PostItem post={data} key={data.id} />)}
+              data?.map((data) => (
+                <PostItem
+                  post={data}
+                  key={data.id}
+                  startEditting={startEditting}
+                  hanleDeletePost={hanleDeletePost}
+                />
+              ))}
           </div>
         </div>
       </div>
