@@ -1,33 +1,59 @@
-1. Các khái niệm cơ bản trong RTK Query
+Quy ước lỗi trả về từ server
+Server phải trả về một kiểu lỗi thống nhất, không thể trả về tùy tiện được
+Ở đây server của mình (Json server) cấu hình để trả về 2 kiểu lỗi
 
-- createApi() : hàm để tạo ra API Slice chứa các định nghĩa endpoint và cách gọi api
-- fetchBaseQuery: hàm đơn giản để thực hiện các request bằng fetch . Giống như axios nhưng tích hợp sẵn cache ,headers...
-- reducerPath: tên mà Api slice sẽ được đăng ký vào redux store
-- endPoints: địnhh nghĩa các hàm tương ứng với từng endpoints như getUsers, createUser...
-- builder.query(): dùng để định nghĩa các api dạng get
-- builder.mutation(): dùng để định nghĩa các api post/put/delete..
-- auto-generated hooks: RTk query sẽ tạo các hook sẵn cho bạn như useGetUsersQuery() hoặc useCreateUserMutation()
-- cache: RTk Query sẽ cache lại các response và tự động kiểm soát cache
+1. lỗi liên quan đến việc gửi data như POST, PUT thì error là một object kiểu EntityError
+   {
+   "error": {
+   "publishDate": "không được publish vào thời điểm trong quá khứ"
+   }
+   }
 
-2. Luồng hoạt động của RTK Query
-   ví dụ: giả sử gọi useGetUsersQueryy() để lấy danh sách người dùng:
+interface EntityError {
+[key:string | number]: string | EntityError | EntitError[]
+}
 
-- component gọi hook
-- RTK query kiểm tra cache trong Redux
-- nếu chưa có hoặc đã hết hạn -> fetch api
-- fetchBaseQuery gửi request HTTP đến server
-- Server trả dữ liệu
-- RTK query: -lưu dữ liệu vào redux store - cập nhật trạng thái (loading -> success, error nếu fail) - cùng cấp dữ liệu (data) cho component
+2. các lỗi còn lại sẽ trả về một thông báo dạng error: string
+   {
+   "error":"lỗi rồi bạn ơi"
+   }
 
-3. Các phần tự động hóa trong luồng:
+   Lỗi từ RTK Query
+   Sẽ có 2 kiểu: FetchBaseQueryError | SerializedError
 
-- cache & deduplication: tránh gọi lại api nếu dữ liệu đã có
-- loading/error state: giảm logic phức tạp
-- auto refetch khi cần: luôn có data mới nhất khi cần
-- hook sẵn ddể dùng: không cần viết useEffetch, dispatch..
+   SerializedError có dạng:
+   export interface SerializedError {
+   name?: string
+   message?: string
+   stack?: string
+   code?: string
+   }
 
-=> khi nào nên dùng RTk Query:
+   FetchBaseQueryError có dạng:
+   export type FetchBaseQueryError =
+   | {
+   status: number
+   data: unknown
+   }
+   | {
 
-- khi ứng dụng gọi API CRUD nhiều và cần caching
-- khi bạn muốn tối ưu hiệu suất render và quản lý trạng thái api tốt hơn
-- khi bạn đã dùng redux và muốn tích hợp gọi API mà không viết tay thunk hoặc axios
+   status: 'FETCH_ERROR'
+   data?: undefined
+   error: string
+   }
+   | {
+
+   status: 'PARSING\*ERROR'
+   originalStatus: number
+   data: string
+   error: string
+   }
+   | {
+
+   status: 'CUSTOM_ERROR'
+   data?: unknown
+   error: string
+   }
+
+KHi mà fetch api bị lỗi RTK query sẽ trả lỗi về theo dạng FetchBaseQueryError
+Còn khi người dùng tự ném lỗi ra bằng throw thì RTK sẽ trả về theo kiểu SerializedError
