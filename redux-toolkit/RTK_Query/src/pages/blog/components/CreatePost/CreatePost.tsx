@@ -28,7 +28,11 @@ export default function CreatePost() {
   const [formData, setFormData] = useState<Omit<Post, "id">>(initialState);
   const postId = useSelector((state: RootState) => state.blogReducer.postId);
   const [addPost, addPostResult] = useAddPostMutation();
-  const { data } = useGetPostQuery(postId, { skip: !postId });
+  const { data, refetch } = useGetPostQuery(postId, {
+    skip: !postId,
+    refetchOnMountOrArgChange: 5,
+    pollingInterval: 1000,
+  });
   const [updatePost, updatePostResult] = useUpdatePostMutation();
 
   /**
@@ -73,6 +77,15 @@ export default function CreatePost() {
   };
   return (
     <form onSubmit={handleSubmit}>
+      <button
+        type="button"
+        className="group relative mb-2 mr-2 inline-flex items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-red-200 via-red-300 to-yellow-200 p-0.5 text-sm font-medium text-gray-900 focus:outline-none focus:ring-4 focus:ring-red-100 group-hover:from-red-200 group-hover:via-red-300 group-hover:to-yellow-200 dark:text-white dark:hover:text-gray-900 dark:focus:ring-red-400"
+        onClick={() => refetch()}
+      >
+        <span className="relative rounded-md bg-white px-5 py-2.5 transition-all duration-75 ease-in group-hover:bg-opacity-0 dark:bg-gray-900">
+          Force Fetch
+        </span>
+      </button>
       <div className="mb-6">
         <label
           htmlFor="title"

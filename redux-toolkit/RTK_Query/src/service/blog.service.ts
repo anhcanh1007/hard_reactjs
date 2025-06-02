@@ -37,7 +37,14 @@ import { CustomError } from "../ultils/helpers";
 export const blogApi = createApi({
   reducerPath: "blogApi",
   tagTypes: ["Posts"], // Những kiểu tag cho phép dùng trong blogApi
-  baseQuery: fetchBaseQuery({ baseUrl: "http://localhost:4000/" }),
+  keepUnusedDataFor: 10, //giữ data trong 10s sẽ xóa (mặc định 60s)
+  baseQuery: fetchBaseQuery({
+    baseUrl: "http://localhost:4000/",
+    prepareHeaders(headers) {
+      headers.set("authorization", "Bearer ABCXYZ");
+      return headers;
+    },
+  }),
   endpoints: (build) => ({
     // generic type theo thứ tự là kiểu dữ liệu trả về và argument
     getPosts: build.query<Post[], void>({
@@ -94,7 +101,16 @@ export const blogApi = createApi({
         error ? [] : [{ type: "Posts", id: "LIST" }],
     }),
     getPost: build.query<Post, string>({
-      query: (id) => `posts/${id}`,
+      query: (id) => ({
+        url: `posts/${id}`,
+        headers: {
+          hello: "anh canh dang test",
+        },
+        params: {
+          first_name: "anh dev",
+          "last-name": "dep trai",
+        },
+      }),
     }),
     updatePost: build.mutation<Post, { id: string; body: Omit<Post, "id"> }>({
       query: (data) => {
