@@ -1,4 +1,4 @@
-import type { Students } from "../types/students.type";
+import type { Student, Students } from "../types/students.type";
 import http from "../ultils/http";
 
 export const getStudents = (page: number | string, limit: number | string) => {
@@ -9,3 +9,6 @@ export const getStudents = (page: number | string, limit: number | string) => {
     },
   });
 };
+
+export const addStudent = (student: Omit<Student, "id">) =>
+  http.post<Student>("students", student);
