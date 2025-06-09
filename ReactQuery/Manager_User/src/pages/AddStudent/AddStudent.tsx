@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMatch, useParams } from "react-router-dom";
 import type { Student } from "../../types/students.type";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addStudent, getStudent, updateStudent } from "../../apis/students.api";
 import { isAxiosError } from "../../ultils/hookquery";
 import { toast } from "react-toastify";
@@ -22,11 +22,16 @@ type FormError =
       [key in keyof FormType]: string;
     }
   | null;
-
+const gender = {
+  male: "Male",
+  female: "Female",
+  other: "Other",
+};
 export default function AddStudent() {
   const addMatch = useMatch("/students/add");
   const isMode = Boolean(addMatch);
   const [formState, setFormState] = useState<FormType>(initialState);
+  const queryClient = useQueryClient(); //sử dụng nó để cập nhật data sau khi update bằng cách gọi setQueryData
 
   const addStudentQuery = useMutation({
     mutationFn: (body: FormType) => {
@@ -40,6 +45,9 @@ export default function AddStudent() {
     mutationFn: (_) => {
       return updateStudent(id as string, formState as Student);
     },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["student", id], data); //sử dụng nó để cập nhật data sau khi update
+    },
   });
 
   const studentResApi = useQuery({
@@ -48,6 +56,7 @@ export default function AddStudent() {
       return getStudent(id as string).then((res) => res.data);
     },
     enabled: id !== undefined,
+    // staleTime: 1000 * 10,
   });
   useEffect(() => {
     if (studentResApi.isSuccess && studentResApi.data) {
@@ -141,7 +150,8 @@ export default function AddStudent() {
                   id="gender-1"
                   type="radio"
                   name="gender"
-                  value="male"
+                  value={gender.male}
+                  checked={formState.gender === gender.male}
                   onChange={handleChange("gender")}
                   className="h-4 w-4 border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
                 />
@@ -158,7 +168,8 @@ export default function AddStudent() {
                   id="gender-2"
                   type="radio"
                   name="gender"
-                  value="female"
+                  value={gender.female}
+                  checked={formState.gender === gender.female}
                   onChange={handleChange("gender")}
                   className="h-4 w-4 border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
                 />
@@ -175,7 +186,8 @@ export default function AddStudent() {
                   id="gender-3"
                   type="radio"
                   name="gender"
-                  value="other"
+                  value={gender.other}
+                  checked={formState.gender === gender.other}
                   onChange={handleChange("gender")}
                   className="h-4 w-4 border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
                 />

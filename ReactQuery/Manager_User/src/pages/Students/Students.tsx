@@ -1,8 +1,12 @@
 import { Link } from "react-router-dom";
-import { deleteStudent, getStudents } from "../../apis/students.api";
+import {
+  deleteStudent,
+  getStudent,
+  getStudents,
+} from "../../apis/students.api";
 import type { Students } from "../../types/students.type";
 import { useQueryParams } from "../../ultils/hookquery";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import classNames from "classnames";
 import { Fragment } from "react/jsx-runtime";
 import { toast } from "react-toastify";
@@ -19,6 +23,7 @@ export default function Students() {
   //       setLoading(false);
   //     });
   // }, []);
+  const queryClient = useQueryClient();
 
   const getParams: { page?: string } = useQueryParams();
   const page = Number(getParams.page) || 1;
@@ -35,11 +40,19 @@ export default function Students() {
     },
     onSuccess: (_, id) => {
       toast.success(`Delete thanh cong voi id la ${id}!`);
+      queryClient.invalidateQueries({ queryKey: ["students", page] }); //nó được sử dụng để sau khi xóa một item thfi ngay lập tức gọi lại api getStudents
     },
   });
 
   const handleDelete = (id: number) => {
     deleteStudentQuery.mutate(id);
+  };
+  const handlePrefetchStudent = (id: number) => {
+    //nó có chức năng khi hover chuột vào vị trí tr thì nó sẽ fetch api trước khi nhấp vào, và khi nhấp vao api đã có sẵn data nên không fetch nữa => tăng trải nhigệm người dùng
+    queryClient.prefetchQuery({
+      queryKey: ["student", String(id)],
+      queryFn: () => getStudent(id),
+    });
   };
   return (
     <div>
@@ -97,6 +110,7 @@ export default function Students() {
                 {data?.data.map((student) => (
                   <tr
                     key={student.id}
+                    onMouseEnter={() => handlePrefetchStudent(student.id)}
                     className="border-b bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-600"
                   >
                     <td className="py-4 px-6">{student.id}</td>
