@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
-import { getStudents } from "../../apis/students.api";
+import { deleteStudent, getStudents } from "../../apis/students.api";
 import type { Students } from "../../types/students.type";
 import { useQueryParams } from "../../ultils/hookquery";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import classNames from "classnames";
 import { Fragment } from "react/jsx-runtime";
+import { toast } from "react-toastify";
 const LIMIT = 10;
 export default function Students() {
   // const [students, setStudents] = useState<Students>([]);
@@ -27,6 +28,19 @@ export default function Students() {
   });
   const totalStudents = Number(data?.headers["x-total-count"]) || 0;
   const totalPage = Math.ceil(totalStudents / LIMIT);
+
+  const deleteStudentQuery = useMutation({
+    mutationFn: (id: string | number) => {
+      return deleteStudent(id);
+    },
+    onSuccess: (_, id) => {
+      toast.success(`Delete thanh cong voi id la ${id}!`);
+    },
+  });
+
+  const handleDelete = (id: number) => {
+    deleteStudentQuery.mutate(id);
+  };
   return (
     <div>
       <h1 className="text-lg">Students</h1>
@@ -102,12 +116,16 @@ export default function Students() {
                     <td className="py-4 px-6">{student.email}</td>
                     <td className="py-4 px-6 text-right">
                       <Link
-                        to="/students/1"
+                        to={`/students/${student.id}`}
                         className="mr-5 font-medium text-blue-600 hover:underline dark:text-blue-500"
                       >
                         Edit
                       </Link>
-                      <button className="font-medium text-red-600 dark:text-red-500">
+                      <button
+                        type="button"
+                        className="font-medium text-red-600 dark:text-red-500"
+                        onClick={() => handleDelete(student.id)}
+                      >
                         Delete
                       </button>
                     </td>

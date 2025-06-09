@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
-import { useMatch } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useMatch, useParams } from "react-router-dom";
 import type { Student } from "../../types/students.type";
-import { useMutation } from "@tanstack/react-query";
-import { addStudent } from "../../apis/students.api";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { addStudent, getStudent, updateStudent } from "../../apis/students.api";
 import { isAxiosError } from "../../ultils/hookquery";
+import { toast } from "react-toastify";
 
 type FormType = Omit<Student, "id">;
 const initialState: FormType = {
@@ -27,12 +28,35 @@ export default function AddStudent() {
   const isMode = Boolean(addMatch);
   const [formState, setFormState] = useState<FormType>(initialState);
 
-  const { mutate, mutateAsync, error, data, reset } = useMutation({
+  const addStudentQuery = useMutation({
     mutationFn: (body: FormType) => {
       return addStudent(body);
     },
   });
+
+  const { id } = useParams();
+
+  const updateStudentQuery = useMutation({
+    mutationFn: (_) => {
+      return updateStudent(id as string, formState as Student);
+    },
+  });
+
+  const studentResApi = useQuery({
+    queryKey: ["student", id],
+    queryFn: () => {
+      return getStudent(id as string).then((res) => res.data);
+    },
+    enabled: id !== undefined,
+  });
+  useEffect(() => {
+    if (studentResApi.isSuccess && studentResApi.data) {
+      setFormState(studentResApi.data);
+    }
+  }, [studentResApi.data, studentResApi.isSuccess]);
+
   const errorForm: FormError = useMemo(() => {
+    const error = isMode ? addStudentQuery.error : updateStudentQuery.error;
     if (
       isAxiosError<{ error: FormError }>(error) &&
       error.response?.status === 422
@@ -40,34 +64,42 @@ export default function AddStudent() {
       return error.response.data.error;
     }
     return null;
-  }, [error]);
+  }, [addStudentQuery.error, updateStudentQuery.error, isMode]);
 
   const handleChange =
     (name: keyof FormType) => (e: React.ChangeEvent<HTMLInputElement>) => {
       setFormState((prev) => ({ ...prev, [name]: e.target.value }));
-      if (data || error) {
+      if (addStudentQuery.data || addStudentQuery.error) {
         // cho nay nhan data hoac error tu mutation de check neu co thi reset => clean ux
-        reset();
+        addStudentQuery.reset();
       }
     };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    // cach 1 : khong dung async/await
-    // mutate(formState, {
-    //   onSuccess: () => {
-    //     setFormState(initialState);
-    //   },
-    // });
+    if (isMode) {
+      // cach 1 : khong dung async/await
+      addStudentQuery.mutate(formState, {
+        onSuccess: () => {
+          setFormState(initialState);
+          toast.success("Add thanh cong!");
+        },
+      });
+    } else {
+      updateStudentQuery.mutate(undefined, {
+        onSuccess: () => {
+          toast.success("Update thanh cong!");
+        },
+      });
+    }
 
     // cach 2
-    try {
-      await mutateAsync(formState);
-      setFormState(initialState);
-    } catch (error) {
-      console.log(error);
-    }
+    // try {
+    //   await mutateAsync(formState);
+    //   setFormState(initialState);
+    // } catch (error) {
+    //   console.log(error);
+    // }
     //  dung de reset form sau khi submit
     console.log(formState);
   };
