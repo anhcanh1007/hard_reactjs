@@ -24,6 +24,10 @@
 Một data mà đã stale thì khi gọi lại query của data đó, nó sẽ fetch lại APỊ Nếu không stale thì không fetch lại API
 Một data mà bị xóa khỏi bộ nhớ (tức là quá thời gian cacheTime) thì khi gọi laij query của data đó, nó sẽ fetch lại API . Nếu còn chưa bị xóa khỏi bộ nhớ nhưng đã stale thì nó sẽ trả về data cached và fetch API ngầm . Sau khi fetch xong nó sẽ update lại data cached và trả về data mới cho bạn
 
+Còn đối với trường hợp `staleTime` giữa 2 lần khác nhau thì nếu data của lần query thứ 1 xuất hiện lâu hơn thời gian `staleTime` của lần query thứ 2 thì nó sẽ bị gọi lại ở lần thứ 2, dù cho có stale hay chưa.Add commentMore actions
+
+> Ví dụ: `useQuery({ queryKey: ['todos'], queryFn: fetchTodos, staleTime: 10*1000 })` xuất hiện 5s trước, bây giờ chúng ta gọi lại `useQuery({ queryKey: ['todos'], queryFn: fetchTodos, staleTime: 2*1000 })` thì rõ ràng cái data của lần 1 dù nó chưa được cho là stale nhưng nó xuất hiện 5s trước và lâu hơn thời gian staleTime là 2s nên nó sẽ bị gọi lại ở lần 2.
+
 # Caching là vòng đời của:
 
 - Query Instance có hoặc không cache data

@@ -27,11 +27,12 @@ export default function Students() {
 
   const getParams: { page?: string } = useQueryParams();
   const page = Number(getParams.page) || 1;
-  const { data, isLoading } = useQuery({
+  const studentQueryRes = useQuery({
     queryKey: ["students", page],
     queryFn: () => getStudents(page, LIMIT),
   });
-  const totalStudents = Number(data?.headers["x-total-count"]) || 0;
+  const totalStudents =
+    Number(studentQueryRes.data?.headers["x-total-count"]) || 0;
   const totalPage = Math.ceil(totalStudents / LIMIT);
 
   const deleteStudentQuery = useMutation({
@@ -52,11 +53,34 @@ export default function Students() {
     queryClient.prefetchQuery({
       queryKey: ["student", String(id)],
       queryFn: () => getStudent(id),
+      staleTime: 10 * 1000,
     });
+  };
+
+  //Cancel api => hủy không gọi nữa
+  const handleCancelApi = () => {
+    queryClient.cancelQueries({ queryKey: ["students"] });
+  };
+
+  // Refresh lại api
+  const refreshApi = () => {
+    studentQueryRes.refetch();
   };
   return (
     <div>
       <h1 className="text-lg">Students</h1>
+      <button
+        className="bg-red-500 px-2 py-4 text-white rounded-2xl"
+        onClick={() => handleCancelApi()}
+      >
+        Cancel Api
+      </button>
+      <button
+        className="bg-red-500 px-2 py-4 text-white rounded-2xl"
+        onClick={() => refreshApi()}
+      >
+        Refresh Api
+      </button>
       <div className="mt-6">
         <Link
           to="/students/add"
@@ -65,7 +89,7 @@ export default function Students() {
           Add Student
         </Link>
       </div>
-      {isLoading && (
+      {studentQueryRes.isLoading && (
         <div role="status" className="mt-6 animate-pulse">
           <div className="mb-4 h-4  rounded bg-gray-200 dark:bg-gray-700" />
           <div className="mb-2.5 h-10  rounded bg-gray-200 dark:bg-gray-700" />
@@ -83,7 +107,7 @@ export default function Students() {
           <span className="sr-only">Loading...</span>
         </div>
       )}
-      {!isLoading && (
+      {!studentQueryRes.isLoading && (
         <Fragment>
           <div className="relative mt-6 overflow-x-auto shadow-md sm:rounded-lg">
             <table className="w-full text-left text-sm text-gray-500 dark:text-gray-400">
@@ -107,7 +131,7 @@ export default function Students() {
                 </tr>
               </thead>
               <tbody>
-                {data?.data.map((student) => (
+                {studentQueryRes.data?.data.map((student) => (
                   <tr
                     key={student.id}
                     onMouseEnter={() => handlePrefetchStudent(student.id)}
